@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PrepMind AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/theme.css" />
+    <script>
+      (function () {
+        try {
+          var k = "prepMind_theme";
+          var s = localStorage.getItem(k);
+          var t =
+            s === "light" || s === "dark"
+              ? s
+              : window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          document.documentElement.dataset.theme = t;
+        } catch (e) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <aside class="side-rail side-rail--left" aria-label="Study modes">
+        <div class="side-rail__card">
+          <p class="side-rail__label">Modes</p>
+          <ul class="side-rail__list">
+            <li>
+              <span class="side-rail__dot" aria-hidden="true"></span>
+              <span><strong>Answer</strong> — quick explanations</span>
+            </li>
+            <li>
+              <span class="side-rail__dot side-rail__dot--b" aria-hidden="true"></span>
+              <span><strong>Study Notes</strong> — condensed sheets</span>
+            </li>
+            <li>
+              <span class="side-rail__dot side-rail__dot--c" aria-hidden="true"></span>
+              <span><strong>Quiz</strong> — practice &amp; check</span>
+            </li>
+          </ul>
+        </div>
+        <div class="side-rail__flow" aria-hidden="true">
+          <p class="side-rail__flow-title">Flow</p>
+          <ol class="side-rail__flow-steps">
+            <li><span class="side-rail__flow-num">1</span> Ask or upload</li>
+            <li><span class="side-rail__flow-num">2</span> Tune chips</li>
+            <li><span class="side-rail__flow-num">3</span> Send &amp; learn</li>
+          </ol>
+        </div>
+        <div class="side-rail__accent" aria-hidden="true"></div>
+      </aside>
+
+      <main class="layout">
+      <header class="topbar">
+        <div class="topbar__glow" aria-hidden="true"></div>
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">
+            <span class="brand-mark__inner"></span>
+          </span>
+          <div class="brand__text">
+            <div class="brand__row">
+              <h1>PrepMind AI</h1>
+              <span class="brand-badge">Study</span>
+            </div>
+            <p>Ask questions, set course context, or attach a PDF</p>
+          </div>
+        </div>
+        <div class="topbar__actions">
+          <button type="button" class="ghost-btn" id="openHistoryBtn">
+            History
+          </button>
+          <button type="button" class="ghost-btn" id="openSettingsBtn">
+            Settings
+          </button>
+          <button type="button" class="theme-toggle" id="themeToggle">
+            Dark mode
+          </button>
+          <button type="button" id="logoutBtn" class="ghost-btn" hidden>
+            Sign out
+          </button>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <div class="chat-history-bar" aria-label="Conversations">
+          <button
+            type="button"
+            class="chat-history-bar__new"
+            id="newChatBtn"
+            title="Start a new chat"
+          >
+            + New
+          </button>
+          <ul class="chat-history-bar__list" id="chatHistoryList"></ul>
+        </div>
+        <div class="chat-main">
+        <div class="chat-stream" id="chatStream">
+          <div class="welcome-pop" id="welcomeNotify" role="status">
+            <button
+              type="button"
+              class="welcome-pop__close"
+              id="welcomeDismiss"
+              aria-label="Dismiss getting started tip"
+            >
+              ×
+            </button>
+            <div class="welcome-pop__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L3 7v10l9 5 9-5V7l-9-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="welcome-pop__body">
+              <strong class="welcome-pop__title">Getting started</strong>
+              <p class="welcome-pop__text">
+                Upload a lecture PDF, pick <strong>Study Notes</strong> or <strong>Quiz</strong> in the chips, then send — or ask a quick question without a file.
+              </p>
+            </div>
+          </div>
+          <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+        </div>
+        <p id="status" class="status status-pill" data-state="idle">Ready</p>
+        <article id="output" class="output"></article>
+        <div id="quizArea" class="quiz-area"></div>
+
+        <div class="composer-shell">
+          <div class="composer-chips" role="toolbar" aria-label="Message options">
+            <label class="chip chip-select" title="Response type">
+              <span class="chip-icon" aria-hidden="true">◇</span>
+              <select id="responseMode" aria-label="Response type">
+                <option value="answer" selected>Answer</option>
+                <option value="study">Study Notes</option>
+                <option value="quiz">Quiz</option>
+              </select>
+            </label>
+            <label class="chip chip-select" title="Analysis depth">
+              <span class="chip-icon" aria-hidden="true">◎</span>
+              <select id="analysisMode" aria-label="Depth">
+                <option value="deep" selected>Deep</option>
+                <option value="balanced">Balanced</option>
+              </select>
+            </label>
+            <button
+              type="button"
+              class="chip chip-btn"
+              id="courseChipToggle"
+              aria-expanded="false"
+              aria-controls="courseExpand"
+              title="Course name"
+            >
+              <span class="chip-icon" aria-hidden="true">▤</span>
+              <span class="chip-text">Course</span>
+            </button>
+            <label class="chip chip-file" title="Attach PDF">
+              <input id="pdfFile" type="file" accept="application/pdf" hidden />
+              <span class="chip-icon" aria-hidden="true">📎</span>
+              <span class="chip-text" id="pdfChipLabel">PDF</span>
+            </label>
+            <button type="button" class="chip chip-btn" id="saveConfigBtn" title="Save preferences">
+              <span class="chip-icon" aria-hidden="true">✓</span>
+              <span class="chip-text">Save</span>
+            </button>
+          </div>
+          <div class="course-expand" id="courseExpand" hidden>
+            <input
+              id="courseName"
+              type="text"
+              placeholder="Course name (optional)"
+              autocomplete="off"
+            />
+          </div>
+          <div class="composer-row">
+            <input
+              id="messageInput"
+              type="text"
+              placeholder="Message PrepMind…"
+              autocomplete="off"
+              aria-label="Message"
+            />
+            <button type="button" id="runBtn" class="primary">Send</button>
+          </div>
+        </div>
+        </div>
+      </section>
+    </main>
+
+      <aside class="side-rail side-rail--right" aria-label="Tips">
+        <div class="side-rail__card side-rail__card--tips">
+          <p class="side-rail__label">Tips</p>
+          <p class="side-rail__tip">Name your course so answers stay on-topic.</p>
+          <p class="side-rail__tip">Attach a PDF for notes or a quiz from real material.</p>
+          <p class="side-rail__tip">Use <strong>Deep</strong> when you need full derivations.</p>
+        </div>
+        <div class="side-rail__shortcuts">
+          <p class="side-rail__label">Shortcuts</p>
+          <p class="side-rail__kbd-line"><kbd>Enter</kbd> send message</p>
+          <p class="side-rail__hint">Save remembers your course, mode &amp; depth.</p>
+        </div>
+        <div class="side-rail__mesh" aria-hidden="true"></div>
+      </aside>
+    </div>
+
+    <div id="historySheet" class="chat-sheet" hidden>
+      <div class="chat-sheet__backdrop" data-close-sheet tabindex="-1"></div>
+      <aside
+        class="chat-sheet__panel"
+        aria-labelledby="historySheetTitle"
+      >
+        <div class="chat-sheet__toolbar">
+          <h2 id="historySheetTitle" class="chat-sheet__title">Chat history</h2>
+          <button
+            type="button"
+            class="chat-sheet__x"
+            data-close-sheet
+            aria-label="Close history"
+          >
+            ×
+          </button>
+        </div>
+        <button type="button" class="chat-sheet__new" id="historySheetNewBtn">
+          + New chat
+        </button>
+        <ul id="historySheetList" class="chat-sheet__list"></ul>
+      </aside>
+    </div>
+
+    <div id="settingsModal" class="chat-settings-overlay" hidden>
+      <div
+        class="chat-settings-overlay__backdrop"
+        data-close-settings
+        tabindex="-1"
+      ></div>
+      <div
+        class="chat-settings"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settingsTitle"
+      >
+        <button
+          type="button"
+          class="chat-settings__close"
+          data-close-settings
+          aria-label="Close settings"
+        >
+          ×
+        </button>
+        <h2 id="settingsTitle" class="chat-settings__title">Settings</h2>
+        <p class="chat-settings__lead">
+          Manage your profile, sign-in, and study defaults. Conversation history is
+          stored only in this browser unless you use cloud sync elsewhere.
+        </p>
+
+        <p
+          id="settingsFeedback"
+          class="chat-settings__feedback"
+          role="status"
+          aria-live="polite"
+        ></p>
+
+        <section class="chat-settings__section" aria-labelledby="settingsProfileHeading">
+          <h3 id="settingsProfileHeading" class="chat-settings__h3">Profile</h3>
+          <div class="chat-settings__field">
+            <label class="chat-settings__label" for="settingsDisplayName"
+              >Display name</label
+            >
+            <input
+              id="settingsDisplayName"
+              type="text"
+              class="chat-settings__input"
+              autocomplete="name"
+              maxlength="120"
+              placeholder="Your name"
+            />
+          </div>
+          <button type="button" class="chat-settings__btn-secondary" id="settingsSaveProfileBtn">
+            Save profile
+          </button>
+        </section>
+
+        <section class="chat-settings__section" aria-labelledby="settingsAccountHeading">
+          <h3 id="settingsAccountHeading" class="chat-settings__h3">Account</h3>
+          <div class="chat-settings__field">
+            <span class="chat-settings__label">Email</span>
+            <p id="settingsUserEmail" class="chat-settings__readonly"></p>
+          </div>
+          <div class="chat-settings__field">
+            <label class="chat-settings__label" for="settingsNewEmail"
+              >New email address</label
+            >
+            <input
+              id="settingsNewEmail"
+              type="email"
+              class="chat-settings__input"
+              autocomplete="email"
+              placeholder="Leave blank to keep current"
+            />
+            <p class="chat-settings__hint chat-settings__hint--tight">
+              We’ll send a confirmation link. You may need to confirm from both old and new
+              inboxes depending on your Supabase project settings.
+            </p>
+          </div>
+          <button type="button" class="chat-settings__btn-secondary" id="settingsChangeEmailBtn">
+            Change email
+          </button>
+        </section>
+
+        <section class="chat-settings__section" aria-labelledby="settingsSecurityHeading">
+          <h3 id="settingsSecurityHeading" class="chat-settings__h3">Security</h3>
+          <div class="chat-settings__field">
+            <label class="chat-settings__label" for="settingsNewPassword"
+              >New password</label
+            >
+            <input
+              id="settingsNewPassword"
+              type="password"
+              class="chat-settings__input"
+              autocomplete="new-password"
+              placeholder="At least 8 characters"
+            />
+          </div>
+          <div class="chat-settings__field">
+            <label class="chat-settings__label" for="settingsConfirmPassword"
+              >Confirm new password</label
+            >
+            <input
+              id="settingsConfirmPassword"
+              type="password"
+              class="chat-settings__input"
+              autocomplete="new-password"
+              placeholder="Repeat new password"
+            />
+          </div>
+          <button type="button" class="chat-settings__btn-secondary" id="settingsChangePasswordBtn">
+            Update password
+          </button>
+          <p class="chat-settings__hint chat-settings__hint--tight">
+            For accounts that only use Google or another provider, password changes may not
+            apply until you set a password in your Supabase project.
+          </p>
+        </section>
+
+        <section class="chat-settings__section" aria-labelledby="settingsAppearanceHeading">
+          <h3 id="settingsAppearanceHeading" class="chat-settings__h3">Appearance</h3>
+          <div class="chat-settings__field">
+            <span class="chat-settings__label">Theme</span>
+            <div class="chat-settings__segment" role="group" aria-label="Theme">
+              <button type="button" class="chat-settings__seg" id="settingsThemeLight">
+                Light
+              </button>
+              <button type="button" class="chat-settings__seg" id="settingsThemeDark">
+                Dark
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="chat-settings__section" aria-labelledby="settingsStudyHeading">
+          <h3 id="settingsStudyHeading" class="chat-settings__h3">Study defaults</h3>
+          <p class="chat-settings__hint chat-settings__hint--tight">
+            Used when you send a message (same as the composer chips).
+          </p>
+          <div class="chat-settings__field">
+            <label class="chat-settings__label" for="settingsCourseName"
+              >Default course name</label
+            >
+            <input
+              id="settingsCourseName"
+              type="text"
+              class="chat-settings__input"
+              autocomplete="off"
+              placeholder="Optional"
+            />
+          </div>
+          <div class="chat-settings__field chat-settings__field--row">
+            <label class="chat-settings__label" for="settingsResponseMode"
+              >Default response type</label
+            >
+            <select id="settingsResponseMode" class="chat-settings__select">
+              <option value="answer">Answer</option>
+              <option value="study">Study Notes</option>
+              <option value="quiz">Quiz</option>
+            </select>
+          </div>
+          <div class="chat-settings__field chat-settings__field--row">
+            <label class="chat-settings__label" for="settingsAnalysisMode"
+              >Default analysis depth</label
+            >
+            <select id="settingsAnalysisMode" class="chat-settings__select">
+              <option value="deep">Deep</option>
+              <option value="balanced">Balanced</option>
+            </select>
+          </div>
+          <button type="button" class="chat-settings__save" id="settingsSaveStudyBtn">
+            Save study defaults
+          </button>
+        </section>
+
+        <section class="chat-settings__section" aria-labelledby="settingsSessionHeading">
+          <h3 id="settingsSessionHeading" class="chat-settings__h3">Session</h3>
+          <button type="button" class="chat-settings__btn-secondary" id="settingsSignOutBtn">
+            Sign out
+          </button>
+        </section>
+
+        <div class="chat-settings__danger">
+          <h3 class="chat-settings__h3 chat-settings__h3--danger">Data on this device</h3>
+          <button
+            type="button"
+            class="chat-settings__danger-btn"
+            id="settingsClearChatsBtn"
+          >
+            Clear all conversations
+          </button>
+          <p class="chat-settings__hint">
+            Removes every saved chat in this browser for your account. Your Supabase account
+            is not deleted.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script type="module" src="/js/pages/chat.js"></script>
+  </body>
+</html>
