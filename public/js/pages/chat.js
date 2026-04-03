@@ -6,6 +6,7 @@ import {
   setTheme,
   syncThemeToggleLabel,
 } from "../theme.js";
+import { downloadStudyNotesPdf } from "../study-pdf.js";
 
 const STORAGE_KEY = "study-helper-config-v1";
 const WELCOME_DISMISS_KEY = "prepMind_welcome_dismissed";
@@ -75,6 +76,7 @@ async function main() {
   const chatHistoryList = document.getElementById("chatHistoryList");
   const courseChipToggle = document.getElementById("courseChipToggle");
   const courseExpand = document.getElementById("courseExpand");
+  const downloadStudyPdfBtn = document.getElementById("downloadStudyPdfBtn");
   const welcomeDismiss = document.getElementById("welcomeDismiss");
   const logoutBtn = document.getElementById("logoutBtn");
 
@@ -223,6 +225,29 @@ async function main() {
     const chat = getActiveChat();
     const hasMessages = Boolean(chat && chat.messages.length > 0);
     el.classList.toggle("welcome-pop--hidden", hasMessages);
+  }
+
+  function getLastAssistantText() {
+    const chat = getActiveChat();
+    if (!chat?.messages?.length) return "";
+    for (let i = chat.messages.length - 1; i >= 0; i -= 1) {
+      const m = chat.messages[i];
+      if (
+        m.role === "assistant" &&
+        typeof m.text === "string" &&
+        m.text.trim()
+      ) {
+        return m.text.trim();
+      }
+    }
+    return "";
+  }
+
+  function updateStudyPdfButtonVisibility() {
+    if (!downloadStudyPdfBtn) return;
+    const study = responseModeInput.value === "study";
+    downloadStudyPdfBtn.hidden = !study;
+    downloadStudyPdfBtn.disabled = !getLastAssistantText();
   }
 
   const chatDateFmt = new Intl.DateTimeFormat(undefined, {
@@ -429,6 +454,7 @@ async function main() {
     if (courseNameInput.value.trim()) {
       setCourseExpanded(true);
     }
+    updateStudyPdfButtonVisibility();
   }
 
   function clearAllConversations() {
@@ -613,6 +639,7 @@ async function main() {
       appendBubble(chatMessagesEl, m.role, m.text);
     }
     chatStream.scrollTop = chatStream.scrollHeight;
+    updateStudyPdfButtonVisibility();
   }
 
   function createNewChat() {
@@ -751,6 +778,7 @@ async function main() {
     appendBubble(chatMessagesEl, role, text);
     renderHistoryList();
     syncWelcomeVisibility();
+    updateStudyPdfButtonVisibility();
   }
 
   function setCourseExpanded(open) {
@@ -764,7 +792,10 @@ async function main() {
 
   function loadConfig() {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
+    if (!saved) {
+      updateStudyPdfButtonVisibility();
+      return;
+    }
 
     try {
       const config = JSON.parse(saved);
@@ -777,6 +808,7 @@ async function main() {
     } catch (_) {
       setStatus("Saved preferences invalid. Reset and save again.", "error");
     }
+    updateStudyPdfButtonVisibility();
   }
 
   function persistPreferences({ announceInChat = false } = {}) {
@@ -790,6 +822,7 @@ async function main() {
     if (announceInChat) {
       addMessage("assistant", "Preferences saved.");
     }
+    updateStudyPdfButtonVisibility();
   }
 
   function saveConfig() {
@@ -988,6 +1021,7 @@ async function main() {
     } finally {
       activeChatAbort = null;
       runBtn.disabled = false;
+      updateStudyPdfButtonVisibility();
     }
   }
 
@@ -1240,6 +1274,42 @@ async function main() {
 
   loadConfig();
   updatePdfChipLabel();
+  responseModeInput.addEventListener("change", updateStudyPdfButtonVisibility);
+
+  downloadStudyPdfBtn?.addEventListener("click", async () => {
+    const md = getLastAssistantText();
+    if (!md) {
+      setStatus("No assistant reply to export yet.", "error");
+      return;
+    }
+    downloadStudyPdfBtn.disabled = true;
+    try {
+      const course = courseNameInput.value.trim();
+      const titleLine = course
+        ? `PrepMind — Study notes · ${course}`
+        : "PrepMind — Study notes";
+      const subtitle = course
+        ? `${course} · ${new Date().toLocaleString()}`
+        : `Generated ${new Date().toLocaleString()}`;
+      const fileBase = course
+        ? `prepmind-study-${course.replace(/\s+/g, "-").slice(0, 48)}`
+        : "prepmind-study-notes";
+      await downloadStudyNotesPdf(md, {
+        titleLine,
+        subtitle,
+        fileBase,
+      });
+      setStatus("Study notes saved as PDF", "done");
+    } catch (err) {
+      const msg =
+        err && typeof err.message === "string"
+          ? err.message
+          : "Could not create PDF. Check your connection and try again.";
+      setStatus(msg, "error");
+    } finally {
+      updateStudyPdfButtonVisibility();
+    }
+  });
 }
 
 main();

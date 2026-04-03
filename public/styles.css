@@ -1889,30 +1889,134 @@ body.chat-overlay-open {
 }
 
 @media (max-width: 640px) {
-  .layout {
-    width: 100%;
-    padding: 12px 0 20px;
+  /*
+   * Mobile: one flex column filling the screen so the message list — not CSS “budgets” —
+   * absorbs leftover space. Parents use min-height: 0 so flex + overflow works.
+   */
+  .page-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    min-height: 100svh;
+    padding: 6px 10px max(8px, env(safe-area-inset-bottom, 0px));
+    gap: 0;
+    max-width: none;
   }
 
-  .workspace {
-    padding: 12px 10px 14px;
+  .layout {
+    width: 100%;
+    flex: 1 1 0;
+    min-height: 0;
+    padding: 0 0 4px;
+    gap: 8px;
   }
 
   .topbar {
+    flex-shrink: 0;
     margin: 0;
-    padding: 6px 2px 10px;
+    padding: 4px 0 8px;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .topbar .brand {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  /* Less chrome: tagline hidden; tighter title */
+  .topbar .brand__text > p {
+    display: none;
+  }
+
+  .topbar h1 {
+    font-size: 1.125rem;
+  }
+
+  .topbar .brand-badge {
+    padding: 3px 8px;
+    font-size: 0.5625rem;
+  }
+
+  .topbar .brand-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+  }
+
+  .topbar__actions {
+    flex-shrink: 0;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    max-width: min(300px, 56vw);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .topbar__actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .topbar .ghost-btn,
+  .topbar .theme-toggle {
+    padding: 8px 10px;
+    font-size: 0.6875rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .workspace {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 8px 10px;
+    overflow: hidden;
+    border-radius: 14px;
+  }
+
+  .chat-history-bar {
+    flex-shrink: 0;
+  }
+
+  .chat-main {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: hidden;
   }
 
   .chat-stream {
-    flex: 1 1 auto;
-    min-height: 120px;
-    max-height: none;
-    padding: 12px;
+    flex: 1 1 0;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 10px 12px;
+  }
+
+  .status-pill {
+    flex-shrink: 0;
+    align-self: flex-start;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .welcome-pop {
     grid-template-columns: 1fr;
     padding-right: 44px;
+    margin-bottom: 12px;
   }
 
   .welcome-pop__icon {
@@ -1920,42 +2024,52 @@ body.chat-overlay-open {
     height: 40px;
   }
 
+  .composer-shell {
+    flex-shrink: 0;
+    border-radius: 14px;
+  }
+
   .composer-chips {
+    display: flex;
+    flex-wrap: nowrap;
     gap: 6px;
-    padding: 8px 10px 6px;
+    padding: 8px 10px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .composer-chips::-webkit-scrollbar {
+    display: none;
   }
 
   .chip {
-    padding: 5px 10px;
-    min-height: 32px;
+    flex-shrink: 0;
+    padding: 6px 10px;
+    min-height: 34px;
     font-size: 0.75rem;
   }
 
   .chip-select select {
-    max-width: 100px;
-  }
-
-  .composer-shell {
-    border-radius: 14px;
+    max-width: 7.5rem;
   }
 
   .composer-row {
-    padding: 10px 12px max(12px, env(safe-area-inset-bottom, 0px));
+    padding: 8px 10px max(10px, env(safe-area-inset-bottom, 0px));
     gap: 8px;
   }
 
   .composer-row textarea,
   .composer-row input[type="text"] {
-    /* 16px+ avoids iOS Safari zooming the whole page on focus */
     font-size: 1rem;
-    min-height: 3rem;
-    padding: 12px 10px;
-    max-height: min(11rem, 42dvh);
+    min-height: 2.75rem;
+    padding: 10px 10px;
+    max-height: 7.5rem;
   }
 
   .composer-row .primary {
-    padding: 12px 16px;
-    min-height: 48px;
+    padding: 10px 14px;
+    min-height: 44px;
     align-self: end;
   }
 }
