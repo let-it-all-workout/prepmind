@@ -32,6 +32,39 @@ function getDefaultModelName() {
   return resolveModelName(orimise.defaultModel, "gpt-4o-mini");
 }
 
+/** OpenAI-style SSE may include `data: {"error":{...}}` with HTTP 200. */
+function sseUpstreamErrorMessage(event) {
+  if (!event || event.error == null) return null;
+  const e = event.error;
+  if (typeof e === "string") return e;
+  if (typeof e === "object") {
+    const parts = [
+      typeof e.message === "string" ? e.message : "",
+      e.code != null ? String(e.code) : "",
+      e.type != null ? String(e.type) : "",
+      e.param != null ? String(e.param) : "",
+    ].filter(Boolean);
+    if (parts.length) return parts.join(" — ");
+    try {
+      return JSON.stringify(e).slice(0, 400);
+    } catch {
+      return "Upstream error";
+    }
+  }
+  return String(e);
+}
+
+function logSseUpstreamError(event) {
+  try {
+    const s = JSON.stringify(event);
+    // eslint-disable-next-line no-console
+    console.error("[llm/sse-upstream]", s.length > 2500 ? `${s.slice(0, 2500)}…` : s);
+  } catch {
+    // eslint-disable-next-line no-console
+    console.error("[llm/sse-upstream]", event);
+  }
+}
+
 function resolveAiConfig(taskType, requestModel) {
   if (!orimise.apiKey) {
     throw new Error(
@@ -130,10 +163,10 @@ async function callOrimiseApi({
         continue;
       }
 
-      if (event?.error?.message) {
-        throw new Error(
-          `LLM request failed: ${event.error.message || "Upstream error"}`
-        );
+      const sseErr = sseUpstreamErrorMessage(event);
+      if (sseErr) {
+        logSseUpstreamError(event);
+        throw new Error(`LLM request failed: ${sseErr}`);
       }
 
       const delta = event?.choices?.[0]?.delta;
@@ -216,10 +249,10 @@ function* emitDeltaFromSseLine(line) {
   } catch {
     return;
   }
-  if (event?.error?.message) {
-    throw new Error(
-      `LLM request failed: ${event.error.message || "Upstream error"}`
-    );
+  const sseErr = sseUpstreamErrorMessage(event);
+  if (sseErr) {
+    logSseUpstreamError(event);
+    throw new Error(`LLM request failed: ${sseErr}`);
   }
   const piece = event?.choices?.[0]?.delta?.content;
   if (typeof piece === "string" && piece.length) {
