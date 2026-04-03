@@ -46,11 +46,18 @@ function chatErrorPayload(error) {
     return { code: "ai_network" };
   }
 
-  const llm = /LLM request failed \((\d+)\)/.exec(msg);
-  if (llm) {
-    const st = Number(llm[1]);
-    if (st === 401 || st === 403) return { code: "ai_auth" };
-    if (st === 429) return { code: "ai_rate_limit" };
+  if (/LLM request failed/i.test(msg)) {
+    const llm = /LLM request failed \((\d+)\)/.exec(msg);
+    if (llm) {
+      const st = Number(llm[1]);
+      if (st === 401 || st === 403) return { code: "ai_auth" };
+      if (st === 429) return { code: "ai_rate_limit" };
+      return { code: "ai_upstream_failed" };
+    }
+    /* In-stream SSE errors: "LLM request failed: …" (no HTTP status). */
+    if (/backend_error|internal server error/i.test(msg)) {
+      return { code: "ai_provider_error" };
+    }
     return { code: "ai_upstream_failed" };
   }
 

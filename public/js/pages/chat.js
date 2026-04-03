@@ -863,8 +863,12 @@ async function main() {
             return "The AI service is limiting requests. Wait a few minutes or check your provider’s usage limits.";
           case "ai_upstream_failed":
             return "The AI didn’t return an answer. Confirm ORIMISE_MODEL matches a model your API actually offers, and try again.";
+          case "ai_provider_error":
+            return "The AI service (Orimise) hit an error on their side. Wait a moment and try again, switch model, or check Orimise status — your app is fine.";
           case "ai_network":
             return "Couldn’t reach the AI API (wrong URL or network issue). Check ORIMISE_BASE_URL or ORIMISE_ENDPOINT in .env.";
+          case "internal_error":
+            return "Something went wrong on the server. If it keeps happening, check Railway logs and your Orimise / model settings.";
           default:
             return "Something went wrong. Please try again.";
         }

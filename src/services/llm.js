@@ -260,11 +260,20 @@ function* emitDeltaFromSseLine(line) {
   }
 }
 
+/** Orimise sometimes returns SSE `{"error":{"type":"backend_error",...}}` while HTTP stays 200. */
+function streamOrimiseBackendErrorRetryable(err) {
+  const msg = String(err?.message || "");
+  return (
+    /backend_error/i.test(msg) ||
+    (/LLM request failed/i.test(msg) && /internal server error/i.test(msg))
+  );
+}
+
 /**
- * Stream chat completion deltas (OpenAI-compatible). Sends `stream: true` upstream.
+ * Single streaming attempt (no retry). Sends `stream: true` upstream.
  * Falls back to a single yield if the API returns JSON instead of SSE.
  */
-async function* streamOrimiseChat({
+async function* streamOrimiseChatOnce({
   apiKey = orimise.apiKey,
   endpoint,
   model,
@@ -342,6 +351,32 @@ async function* streamOrimiseChat({
   throw new Error(
     "LLM returned no message content (streaming response had no text)."
   );
+}
+
+/**
+ * Stream chat completion deltas (OpenAI-compatible).
+ * If Orimise returns an in-stream `backend_error`, retry once without streaming.
+ */
+async function* streamOrimiseChat(params) {
+  try {
+    yield* streamOrimiseChatOnce(params);
+  } catch (err) {
+    if (!streamOrimiseBackendErrorRetryable(err)) throw err;
+    // eslint-disable-next-line no-console
+    console.warn(
+      "[llm] stream failed (backend_error / internal); retrying non-stream once"
+    );
+    try {
+      const text = await callOrimiseApi(params);
+      if (text && String(text).length) {
+        yield text;
+        return;
+      }
+    } catch (err2) {
+      throw err2;
+    }
+    throw err;
+  }
 }
 
 module.exports = {
