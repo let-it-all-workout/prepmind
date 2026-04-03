@@ -822,6 +822,9 @@ async function main() {
     if (message) {
       addMessage("user", message);
       messageInput.value = "";
+      if (messageInput.tagName === "TEXTAREA") {
+        messageInput.style.height = "auto";
+      }
     } else if (courseName) {
       addMessage("user", `Course: ${courseName}`);
     } else {
@@ -1203,6 +1206,37 @@ async function main() {
       sendChat();
     }
   });
+
+  function syncMessageComposerHeight() {
+    const el = messageInput;
+    if (!el || el.tagName !== "TEXTAREA") return;
+    el.style.height = "auto";
+    const cap = Math.round(window.innerHeight * 0.35);
+    el.style.height = `${Math.min(el.scrollHeight, cap)}px`;
+  }
+
+  if (messageInput?.tagName === "TEXTAREA") {
+    messageInput.addEventListener("input", syncMessageComposerHeight);
+    const scrollComposerIntoView = () => {
+      requestAnimationFrame(() => {
+        messageInput.scrollIntoView({ block: "end", behavior: "smooth" });
+      });
+    };
+    messageInput.addEventListener("focus", () => {
+      syncMessageComposerHeight();
+      scrollComposerIntoView();
+    });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", () => {
+        if (document.activeElement === messageInput) {
+          requestAnimationFrame(() => {
+            messageInput.scrollIntoView({ block: "end", behavior: "instant" });
+          });
+        }
+      });
+    }
+    syncMessageComposerHeight();
+  }
 
   loadConfig();
   updatePdfChipLabel();

@@ -248,7 +248,8 @@ html[data-theme="dark"] .chip-select select {
   color: #f1f5f9;
 }
 
-html[data-theme="dark"] .composer-row input[type="text"]::placeholder {
+html[data-theme="dark"] .composer-row input[type="text"]::placeholder,
+html[data-theme="dark"] .composer-row textarea::placeholder {
   color: #64748b;
 }
 

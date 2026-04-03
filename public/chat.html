@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+    />
     <title>PrepMind AI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -64,7 +67,11 @@
       <main class="layout">
       <header class="topbar">
         <div class="topbar__glow" aria-hidden="true"></div>
-        <div class="brand">
+        <a
+          href="/"
+          class="brand"
+          aria-label="PrepMind AI — home"
+        >
           <span class="brand-mark" aria-hidden="true">
             <span class="brand-mark__inner"></span>
           </span>
@@ -75,7 +82,7 @@
             </div>
             <p>Ask questions, set course context, or attach a PDF</p>
           </div>
-        </div>
+        </a>
         <div class="topbar__actions">
           <button type="button" class="ghost-btn" id="openHistoryBtn">
             History
@@ -181,13 +188,14 @@
             />
           </div>
           <div class="composer-row">
-            <input
+            <textarea
               id="messageInput"
-              type="text"
+              rows="2"
               placeholder="Message PrepMind…"
               autocomplete="off"
               aria-label="Message"
-            />
+              enterkeyhint="send"
+            ></textarea>
             <button type="button" id="runBtn" class="primary">Send</button>
           </div>
         </div>

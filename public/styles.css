@@ -40,6 +40,7 @@ body {
     linear-gradient(180deg, #b9c4d2 0%, var(--bg-page) 42%, #b4c0d0 100%);
   background-attachment: fixed;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 body::before {
@@ -97,11 +98,13 @@ body::after {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 900px) minmax(0, 1fr);
   gap: clamp(12px, 2.5vw, 28px);
-  align-items: start;
+  align-items: stretch;
   max-width: 1480px;
   margin: 0 auto;
   min-height: 100vh;
-  padding: 16px clamp(12px, 2vw, 24px) 28px;
+  min-height: 100dvh;
+  padding: 16px clamp(12px, 2vw, 28px) 28px;
+  padding-bottom: max(28px, env(safe-area-inset-bottom, 0px));
 }
 
 .side-rail {
@@ -354,6 +357,8 @@ body::after {
   max-width: 900px;
   margin: 0 auto;
   min-height: 100vh;
+  min-height: 100dvh;
+  min-width: 0;
   padding: 16px 0 24px;
   display: flex;
   flex-direction: column;
@@ -398,6 +403,22 @@ body::after {
   display: flex;
   align-items: flex-start;
   gap: 14px;
+}
+
+a.brand {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  border-radius: calc(var(--radius) + 6px);
+  outline-offset: 3px;
+}
+
+a.brand:hover .brand-mark {
+  filter: brightness(1.06);
+}
+
+a.brand:focus-visible {
+  outline: 2px solid var(--accent);
 }
 
 .ghost-btn {
@@ -501,7 +522,7 @@ body::after {
 
 .workspace {
   position: relative;
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -640,7 +661,7 @@ body::after {
 }
 
 .chat-main {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -655,9 +676,11 @@ body::after {
 /* Chat area */
 .chat-stream {
   position: relative;
-  flex: 1;
+  flex: 1 1 auto;
   min-height: min(380px, 48vh);
+  min-height: min(380px, 48dvh);
   max-height: calc(100vh - 210px);
+  max-height: calc(100dvh - 210px);
   overflow: auto;
   padding: 14px;
   border-radius: var(--radius);
@@ -1014,12 +1037,14 @@ body::after {
 /* Composer */
 .composer-shell {
   position: relative;
+  flex-shrink: 0;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius);
   background: linear-gradient(180deg, var(--bg-muted) 0%, var(--bg-elevated) 100%);
   box-shadow: var(--shadow-md);
   overflow: hidden;
   transition: box-shadow 0.25s ease, transform 0.2s ease;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .composer-shell::before {
@@ -1143,30 +1168,45 @@ body::after {
 }
 
 .composer-row {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
   gap: 10px;
   padding: 12px 14px 14px;
   background: var(--bg-elevated);
 }
 
+.composer-row textarea,
 .composer-row input[type="text"] {
-  flex: 1;
+  grid-column: 1;
   min-width: 0;
+  width: 100%;
   border: none;
   background: transparent;
   font: inherit;
   font-size: 0.9375rem;
-  padding: 10px 6px;
+  line-height: 1.45;
+  padding: 10px 8px;
   color: var(--text);
+  resize: none;
+  min-height: 2.75rem;
+  max-height: min(12rem, 32vh);
+  max-height: min(12rem, 32dvh);
 }
 
+.composer-row textarea::placeholder,
 .composer-row input[type="text"]::placeholder {
   color: #94a3b8;
 }
 
+.composer-row textarea:focus,
 .composer-row input[type="text"]:focus {
   outline: none;
+}
+
+.composer-row .primary {
+  grid-column: 2;
+  align-self: end;
 }
 
 button.primary {
@@ -1864,8 +1904,9 @@ body.chat-overlay-open {
   }
 
   .chat-stream {
-    max-height: calc(100vh - 300px);
-    min-height: 200px;
+    flex: 1 1 auto;
+    min-height: 120px;
+    max-height: none;
     padding: 12px;
   }
 
@@ -1894,18 +1935,27 @@ body.chat-overlay-open {
     max-width: 100px;
   }
 
+  .composer-shell {
+    border-radius: 14px;
+  }
+
   .composer-row {
-    flex-wrap: wrap;
+    padding: 10px 12px max(12px, env(safe-area-inset-bottom, 0px));
+    gap: 8px;
+  }
+
+  .composer-row textarea,
+  .composer-row input[type="text"] {
+    /* 16px+ avoids iOS Safari zooming the whole page on focus */
+    font-size: 1rem;
+    min-height: 3rem;
+    padding: 12px 10px;
+    max-height: min(11rem, 42dvh);
   }
 
   .composer-row .primary {
-    width: 100%;
-    order: 2;
-  }
-
-  .composer-row input[type="text"] {
-    order: 1;
-    width: 100%;
-    flex: 1 1 100%;
+    padding: 12px 16px;
+    min-height: 48px;
+    align-self: end;
   }
 }

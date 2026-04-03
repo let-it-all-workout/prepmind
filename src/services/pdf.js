@@ -1,10 +1,21 @@
 const fs = require("fs/promises");
-const pdfParse = require("pdf-parse");
+const pdfParseModule = require("pdf-parse");
 
 async function extractPdfText(filePath) {
   const pdfBuffer = await fs.readFile(filePath);
-  const parsed = await pdfParse(pdfBuffer);
-  return parsed.text || "";
+  /* pdf-parse v1: default export is (buffer) => Promise. v2+: PDFParse class. */
+  if (typeof pdfParseModule === "function") {
+    const parsed = await pdfParseModule(pdfBuffer);
+    return parsed.text || "";
+  }
+  const { PDFParse } = pdfParseModule;
+  const parser = new PDFParse({ data: pdfBuffer });
+  try {
+    const result = await parser.getText();
+    return result.text || "";
+  } finally {
+    await parser.destroy();
+  }
 }
 
 function chunkText(text, maxLength = 12000) {
